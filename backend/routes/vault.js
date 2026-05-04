@@ -1,0 +1,61 @@
+import { Router } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { readVault, addItem, deleteItem } from '../services/storage.js';
+
+const router = Router();
+
+// GET /api/vault — 获取全部数据
+router.get('/', async (req, res) => {
+  try {
+    const data = await readVault();
+    res.json(data);
+  } catch (err) {
+    console.error('[vault GET]', err.message);
+    res.status(500).json({ error: '读取数据失败' });
+  }
+});
+
+// POST /api/vault — 保存一条新条目
+router.post('/', async (req, res) => {
+  const { type, intent, skeleton, word, hint, source } = req.body;
+  if (!type || !intent || !hint || !source) {
+    return res.status(400).json({ error: '缺少必要字段' });
+  }
+  if (type === 'skeleton' && !skeleton) {
+    return res.status(400).json({ error: 'skeleton 类型必须提供 skeleton 字段' });
+  }
+  if (type === 'word' && !word) {
+    return res.status(400).json({ error: 'word 类型必须提供 word 字段' });
+  }
+
+  const item = {
+    id: uuidv4(),
+    type,
+    intent,
+    ...(type === 'skeleton' ? { skeleton } : { word }),
+    hint,
+    source,
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    const data = await addItem(item);
+    res.status(201).json({ item, data });
+  } catch (err) {
+    console.error('[vault POST]', err.message);
+    res.status(500).json({ error: '保存失败' });
+  }
+});
+
+// DELETE /api/vault/:id — 删除一条条目
+router.delete('/:id', async (req, res) => {
+  try {
+    const data = await deleteItem(req.params.id);
+    res.json(data);
+  } catch (err) {
+    console.error('[vault DELETE]', err.message);
+    res.status(500).json({ error: '删除失败' });
+  }
+});
+
+export default router;
