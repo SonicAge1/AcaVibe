@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Wand2, Save, RotateCcw, Loader2 } from 'lucide-react'
-import { extractAPI } from '../api/client'
-import { useLang } from '../LangContext'
-import IntentTagSelector from './IntentTagSelector'
+import { extractAPI } from '../../api/client'
+import { useLang } from '../../LangContext'
+import IntentTagSelector from '../common/IntentTagSelector'
 
 export default function ExtractorPanel({ intents, onSave }) {
   const { t } = useLang()
@@ -71,7 +71,7 @@ export default function ExtractorPanel({ intents, onSave }) {
         </div>
       </div>
 
-      {/* 文本输入（先放） */}
+      {/* 文本输入 */}
       <div>
         <label className="text-xs font-medium text-slate-500 mb-2 block">{t.sourceLabel}</label>
         <textarea
@@ -83,7 +83,7 @@ export default function ExtractorPanel({ intents, onSave }) {
         />
       </div>
 
-      {/* 意图选择（后放） */}
+      {/* 意图选择 */}
       <div>
         <label className="text-xs font-medium text-slate-500 mb-2 block">
           {t.intentLabel} <span className="text-red-400">{t.intentRequired}</span>

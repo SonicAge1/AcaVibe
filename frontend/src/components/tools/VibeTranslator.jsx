@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Sparkles, Save, RotateCcw, Loader2, Check } from 'lucide-react'
-import { translateAPI } from '../api/client'
-import { useLang } from '../LangContext'
-import IntentTagSelector from './IntentTagSelector'
+import { translateAPI } from '../../api/client'
+import { useLang } from '../../LangContext'
+import IntentTagSelector from '../common/IntentTagSelector'
 
 export default function VibeTranslator({ intents, onSave }) {
   const { t } = useLang()

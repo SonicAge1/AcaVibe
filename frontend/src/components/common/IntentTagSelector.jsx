@@ -1,4 +1,4 @@
-import { useLang } from '../LangContext'
+import { useLang } from '../../LangContext'
 
 export default function IntentTagSelector({ intents, value, onChange }) {
   const { t } = useLang()
