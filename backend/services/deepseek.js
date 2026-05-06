@@ -81,7 +81,7 @@ ${text}
 /**
  * 模块二：白话学术化翻译
  * @param {string} text 大白话输入
- * @returns {{ candidates: Array<{ word: string, hint: string }> }}
+ * @returns {{ candidates: Array<{ word: string, translation: string, hint: string }> }}
  */
 export async function translateToAcademic(text) {
   const ai = getClient();
@@ -99,14 +99,14 @@ export async function translateToAcademic(text) {
 
 请提供恰好 3 个不同的英文正式学术词汇或短语，要求：
 - 3 个候选词之间必须有明显的语义侧重差异；
-- 每个候选词附一句中文说明其语境侧重点；
+- 每个候选词提供：①简短中文直译（2-6个字）；②一句中文说明其学术语境侧重点；
 - 不得重复，不得使用简单同义词替换。
 
 严格按如下 JSON 格式返回，不要添加任何额外文字：
 { "candidates": [
-  { "word": "...", "hint": "..." },
-  { "word": "...", "hint": "..." },
-  { "word": "...", "hint": "..." }
+  { "word": "...", "translation": "...", "hint": "..." },
+  { "word": "...", "translation": "...", "hint": "..." },
+  { "word": "...", "translation": "...", "hint": "..." }
 ]}`,
         },
       ],

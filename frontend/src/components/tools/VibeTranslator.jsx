@@ -50,6 +50,7 @@ export default function VibeTranslator({ intents, onSave }) {
         type: 'word',
         intent,
         word: candidate.word,
+        translation: candidate.translation,
         hint: candidate.hint,
         source: text.trim(),
       })
@@ -134,7 +135,12 @@ export default function VibeTranslator({ intents, onSave }) {
                 }`}
               >
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-800 mb-0.5">{c.word}</p>
+                  <p className="text-sm font-semibold text-slate-800 mb-0.5">
+                    {c.word}
+                    {c.translation && (
+                      <span className="ml-2 text-xs font-normal text-indigo-400">{c.translation}</span>
+                    )}
+                  </p>
                   <p className="text-xs text-slate-500 leading-relaxed">{c.hint}</p>
                 </div>
                 {selected === i && (

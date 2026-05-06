@@ -49,9 +49,13 @@ export default function FlashCard({ item, onDelete }) {
         <p className="text-base font-mono font-medium text-slate-800 leading-relaxed break-words">
           {content}
         </p>
+        {/* word 类型：显示中文直译 */}
+        {item.type === 'word' && item.translation && (
+          <p className="text-sm text-indigo-500 font-medium mt-1">{item.translation}</p>
+        )}
       </div>
 
-      {/* 提示文字 */}
+      {/* 提示文字（使用场景） */}
       <div className="px-5 pb-3">
         <p className="text-sm text-slate-500 leading-relaxed">{item.hint}</p>
       </div>

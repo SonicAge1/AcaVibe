@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 
 // POST /api/vault — 保存一条新条目
 router.post('/', async (req, res) => {
-  const { type, intent, skeleton, word, hint, source } = req.body;
+  const { type, intent, skeleton, word, translation, hint, source } = req.body;
   if (!type || !intent || !hint || !source) {
     return res.status(400).json({ error: '缺少必要字段' });
   }
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     id: uuidv4(),
     type,
     intent,
-    ...(type === 'skeleton' ? { skeleton } : { word }),
+    ...(type === 'skeleton' ? { skeleton } : { word, ...(translation ? { translation } : {}) }),
     hint,
     source,
     createdAt: new Date().toISOString(),
