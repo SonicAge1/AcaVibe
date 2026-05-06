@@ -48,6 +48,11 @@ export const LANGS = {
     emptySkeletonHint: '用「学术骨架摘录器」生成句式并保存',
     emptyWordHint: '用「白话学术化翻译机」生成词汇并保存',
     loading: '加载中...',
+    searchPlaceholder: '搜索词汇、骨架...',
+    searchEmpty: '没有匹配的结果',
+    viewFlash: '闪卡',
+    viewGrid: '全览',
+    gridHint: '点击卡片可复制内容',
 
     // Intents
     intents: {
@@ -109,6 +114,11 @@ export const LANGS = {
     emptySkeletonHint: 'Use the Skeleton Extractor to generate and save one ✨',
     emptyWordHint: 'Use the Vibe Translator to generate and save one ✨',
     loading: 'Loading...',
+    searchPlaceholder: 'Search cards...',
+    searchEmpty: 'No matching results',
+    viewFlash: 'Flashcard',
+    viewGrid: 'Overview',
+    gridHint: 'Click a card to copy',
 
     // Intents (English labels shown in EN mode)
     intents: {
