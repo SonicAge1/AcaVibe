@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { BookOpen, Type, LayoutDashboard, Search, LayoutGrid, GalleryHorizontal, X } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { BookOpen, Type, LayoutDashboard, Search, LayoutGrid, GalleryHorizontal, X, Trash2, CheckSquare } from 'lucide-react'
 import { useLang } from '../../LangContext'
 import FlashCard from './FlashCard'
 import Pagination from './Pagination'
@@ -23,14 +23,37 @@ const TYPE_CONFIG = {
   },
 }
 
-export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }) {
+// 排序函数
+function sortCards(cards, mode) {
+  const arr = [...cards]
+  switch (mode) {
+    case 'oldest':   return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    case 'alpha':    return arr.sort((a, b) => {
+      const ca = (a.skeleton ?? a.word ?? '').toLowerCase()
+      const cb = (b.skeleton ?? b.word ?? '').toLowerCase()
+      return ca.localeCompare(cb)
+    })
+    case 'reviewing': {
+      const ORDER = { reviewing: 0, unreviewed: 1, mastered: 2 }
+      return arr.sort((a, b) => (ORDER[a.status||'unreviewed'] - ORDER[b.status||'unreviewed']))
+    }
+    case 'newest':
+    default:
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+}
+
+export default function KanbanVault({ vault, onDelete, onBulkDelete, onUpdateStatus, loading }) {
   const { t } = useLang()
   const [activeType, setActiveType]       = useState('skeleton')
   const [activeIntent, setActiveIntent]   = useState(null)
   const [cardIndex, setCardIndex]         = useState(0)
   const [viewMode, setViewMode]           = useState('flash')
   const [query, setQuery]                 = useState('')
-  const [statusFilter, setStatusFilter]   = useState('all') // 'all' | 'reviewing' | 'mastered'
+  const [statusFilter, setStatusFilter]   = useState('all')
+  const [sortMode, setSortMode]           = useState('newest')
+  const [selectMode, setSelectMode]       = useState(false)
+  const [selectedIds, setSelectedIds]     = useState(new Set())
 
   const { intents, items } = vault
 
@@ -43,16 +66,40 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
   }, [intents, items, activeType, activeIntent])
 
   const handleTypeChange = useCallback((type) => {
-    setActiveType(type); setCardIndex(0); setQuery(''); setStatusFilter('all')
+    setActiveType(type); setCardIndex(0); setQuery(''); setStatusFilter('all'); setSelectMode(false); setSelectedIds(new Set())
   }, [])
 
   const handleIntentChange = useCallback((intent) => {
-    setActiveIntent(intent); setCardIndex(0); setQuery(''); setStatusFilter('all')
+    setActiveIntent(intent); setCardIndex(0); setQuery(''); setStatusFilter('all'); setSelectMode(false); setSelectedIds(new Set())
   }, [])
 
   async function handleDelete(id) {
     await onDelete(id)
     setCardIndex(prev => Math.max(0, prev - 1))
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    await onBulkDelete([...selectedIds])
+    setSelectedIds(new Set())
+    setSelectMode(false)
+    setCardIndex(0)
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function handleSelectAll(cards) {
+    setSelectedIds(new Set(cards.map(c => c.id)))
+  }
+
+  function handleDeselectAll() {
+    setSelectedIds(new Set())
   }
 
   if (loading) {
@@ -69,14 +116,12 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
     ? items.filter(i => i.type === activeType && i.intent === activeIntent)
     : []
 
-  // 状态过滤
   const statusFiltered = statusFilter === 'all'
     ? intentCards
     : intentCards.filter(i => (i.status || 'unreviewed') === statusFilter)
 
-  // 搜索过滤
   const q = query.trim().toLowerCase()
-  const currentCards = q
+  const queryFiltered = q
     ? statusFiltered.filter(i => {
         const content = i.type === 'skeleton' ? i.skeleton : i.word
         return (
@@ -87,7 +132,8 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
       })
     : statusFiltered
 
-  const currentCard = currentCards[cardIndex] || null
+  const currentCards = sortCards(queryFiltered, sortMode)
+  const currentCard  = currentCards[cardIndex] || null
 
   const skeletonTotal = items.filter(i => i.type === 'skeleton').length
   const wordTotal     = items.filter(i => i.type === 'word').length
@@ -97,11 +143,9 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
     return acc
   }, {})
 
-  // 当前意图下「待复习」数量，用于角标提示
   const reviewingCount = intentCards.filter(i => (i.status || 'unreviewed') === 'reviewing').length
-
-  const isEmpty       = intentCards.length === 0
-  const isFilterEmpty = !isEmpty && currentCards.length === 0
+  const isEmpty        = intentCards.length === 0
+  const isFilterEmpty  = !isEmpty && currentCards.length === 0
 
   return (
     <section>
@@ -113,7 +157,7 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
         <div className="flex-1" />
         {/* 视图切换 */}
         <div className="flex gap-1 p-0.5 bg-slate-100 rounded-lg">
-          <button onClick={() => setViewMode('flash')} title={t.viewFlash}
+          <button onClick={() => { setViewMode('flash'); setSelectMode(false) }} title={t.viewFlash}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
               viewMode === 'flash' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
             <GalleryHorizontal size={13} /> {t.viewFlash}
@@ -154,11 +198,11 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
         <IntentTabs intents={intents} countMap={countMap} activeIntent={activeIntent} onSelect={handleIntentChange} />
       </div>
 
-      {/* 搜索 + 状态过滤栏 */}
+      {/* 工具栏：搜索 + 状态过滤 + 排序 + 多选按钮 */}
       {!isEmpty && (
-        <div className="flex gap-2 mb-5">
+        <div className="flex flex-wrap gap-2 mb-5">
           {/* 搜索框 */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-40">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               value={query}
@@ -174,18 +218,36 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
             )}
           </div>
           {/* 状态过滤 */}
-          <select
-            value={statusFilter}
-            onChange={e => { setStatusFilter(e.target.value); setCardIndex(0) }}
-            className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent text-slate-600 bg-white transition"
-          >
-            <option value="all">
-              {t.statusUnreviewed} + {t.statusReviewing} + {t.statusMastered}
-            </option>
+          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCardIndex(0) }}
+            className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white text-slate-600 transition">
+            <option value="all">{t.statusUnreviewed} + {t.statusReviewing} + {t.statusMastered}</option>
             <option value="reviewing">🔁 {t.statusReviewing}{reviewingCount > 0 ? ` (${reviewingCount})` : ''}</option>
             <option value="mastered">⭐ {t.statusMastered}</option>
             <option value="unreviewed">⬜ {t.statusUnreviewed}</option>
           </select>
+          {/* 排序 */}
+          {viewMode === 'grid' && (
+            <select value={sortMode} onChange={e => setSortMode(e.target.value)}
+              className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white text-slate-600 transition">
+              <option value="newest">{t.sortNewest}</option>
+              <option value="oldest">{t.sortOldest}</option>
+              <option value="alpha">{t.sortAlpha}</option>
+              <option value="reviewing">{t.sortReviewing}</option>
+            </select>
+          )}
+          {/* 多选按钮（只在全览模式显示） */}
+          {viewMode === 'grid' && !selectMode && (
+            <button onClick={() => setSelectMode(true)}
+              className="flex items-center gap-1.5 text-sm border border-slate-200 rounded-xl px-3 py-2 text-slate-500 hover:text-slate-700 hover:border-slate-300 transition">
+              <CheckSquare size={13} /> {t.selectMode}
+            </button>
+          )}
+          {viewMode === 'grid' && selectMode && (
+            <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()) }}
+              className="flex items-center gap-1.5 text-sm border border-slate-200 rounded-xl px-3 py-2 text-slate-500 hover:border-slate-300 transition">
+              <X size={13} /> {t.cancelSelect}
+            </button>
+          )}
         </div>
       )}
 
@@ -216,11 +278,36 @@ export default function KanbanVault({ vault, onDelete, onUpdateStatus, loading }
           <Pagination current={cardIndex} total={currentCards.length} onChange={setCardIndex} />
         </div>
       ) : (
-        <div>
+        <div className="relative">
           {(q || statusFilter !== 'all') && (
             <p className="text-xs text-slate-400 mb-3">{currentCards.length} / {intentCards.length}</p>
           )}
-          <CardGrid cards={currentCards} onDelete={handleDelete} onUpdateStatus={onUpdateStatus} />
+          <CardGrid
+            cards={currentCards}
+            onDelete={handleDelete}
+            onUpdateStatus={onUpdateStatus}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+          />
+          {/* 批量操作底部操作栏 */}
+          {selectMode && (
+            <div className="sticky bottom-4 mt-4 flex items-center gap-3 bg-white border border-slate-200 shadow-lg rounded-2xl px-4 py-3">
+              <button onClick={() => selectedIds.size === currentCards.length ? handleDeselectAll() : handleSelectAll(currentCards)}
+                className="text-sm text-slate-500 hover:text-slate-700 font-medium transition">
+                {selectedIds.size === currentCards.length ? t.deselectAll : t.selectAll}
+              </button>
+              <span className="flex-1 text-sm text-slate-500 text-center tabular-nums">
+                {t.selectedCount(selectedIds.size)}
+              </span>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedIds.size === 0}
+                className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 disabled:bg-slate-200 disabled:text-slate-400 text-white transition">
+                <Trash2 size={13} /> {t.bulkDelete}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>

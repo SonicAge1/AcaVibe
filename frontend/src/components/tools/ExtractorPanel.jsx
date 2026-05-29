@@ -4,7 +4,7 @@ import { extractAPI } from '../../api/client'
 import { useLang } from '../../LangContext'
 import IntentTagSelector from '../common/IntentTagSelector'
 
-export default function ExtractorPanel({ intents, onSave }) {
+export default function ExtractorPanel({ intents, onSave, onGoVault }) {
   const { t } = useLang()
   const [text, setText]       = useState('')
   const [intent, setIntent]   = useState('')
@@ -142,6 +142,12 @@ export default function ExtractorPanel({ intents, onSave }) {
                 : <><Save size={14} /> {t.saveBtn}</>
             }
           </button>
+          {saved && onGoVault && (
+            <button onClick={onGoVault}
+              className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition text-center">
+              {t.goVault}
+            </button>
+          )}
         </div>
       )}
     </div>

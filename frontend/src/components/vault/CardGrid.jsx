@@ -17,29 +17,28 @@ const TYPE_CONFIG = {
   },
 }
 
-// 状态角标
 function StatusDot({ status }) {
   if (!status || status === 'unreviewed') return null
   if (status === 'reviewing') return (
-    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-100 text-amber-500">
+    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-100 text-amber-500 z-10">
       <Clock size={9} />
     </span>
   )
   return (
-    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-500">
+    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-500 z-10">
       <Star size={9} />
     </span>
   )
 }
 
-// 全览单格
-function GridCell({ item, onDelete, onUpdateStatus }) {
+function GridCell({ item, onDelete, onUpdateStatus, selectMode, isSelected, onToggleSelect }) {
   const { t } = useLang()
   const [copied, setCopied] = useState(false)
   const cfg     = TYPE_CONFIG[item.type]
   const content = item.type === 'skeleton' ? item.skeleton : item.word
 
   function handleCopy(e) {
+    if (selectMode) { onToggleSelect(item.id); return }
     e.stopPropagation()
     navigator.clipboard.writeText(content)
     setCopied(true)
@@ -53,19 +52,29 @@ function GridCell({ item, onDelete, onUpdateStatus }) {
 
   return (
     <div
-      className={`group relative bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer
-        hover:border-slate-300 hover:shadow-sm ring-2 ring-transparent ${cfg.ring} transition-all`}
+      className={`group relative bg-white border rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer transition-all
+        ring-2 ${cfg.ring}
+        ${isSelected
+          ? 'border-indigo-400 ring-indigo-300 bg-indigo-50'
+          : 'border-slate-200 ring-transparent hover:border-slate-300 hover:shadow-sm'
+        }`}
       onClick={handleCopy}
-      title={t.gridHint}
+      title={selectMode ? undefined : t.gridHint}
     >
-      <StatusDot status={item.status} />
+      {/* 多选时左上角复选框 */}
+      {selectMode && (
+        <span className={`absolute top-2 left-2 w-4 h-4 rounded flex items-center justify-center z-10 border
+          ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-slate-300'}`}>
+          {isSelected && <Check size={9} />}
+        </span>
+      )}
 
-      {/* 类型徽章 */}
-      <span className={`self-start inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${cfg.badge}`}>
+      {!selectMode && <StatusDot status={item.status} />}
+
+      <span className={`self-start inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${cfg.badge} ${selectMode ? 'ml-5' : ''}`}>
         {cfg.renderIcon(10)} {t[cfg.labelKey]}
       </span>
 
-      {/* 主内容 */}
       <p className="text-sm font-mono font-medium text-slate-800 leading-snug break-words line-clamp-3">
         {content}
       </p>
@@ -76,30 +85,27 @@ function GridCell({ item, onDelete, onUpdateStatus }) {
 
       <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{item.hint}</p>
 
-      {/* 悬浮操作 */}
-      <div className="absolute top-2 right-2 hidden group-hover:flex items-center gap-1">
-        <button
-          onClick={handleCopy}
-          className={`w-6 h-6 flex items-center justify-center rounded-lg transition-all ${
-            copied ? 'bg-green-100 text-green-500' : 'bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-500'
-          }`}
-          title={t.copyBtn}
-        >
-          {copied ? <Check size={11} /> : <Copy size={11} />}
-        </button>
-        <button
-          onClick={handleDelete}
-          className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 transition-all"
-          title={t.deleteTitle}
-        >
-          <Trash2 size={11} />
-        </button>
-      </div>
+      {/* 非多选模式的悬浮操作 */}
+      {!selectMode && (
+        <div className="absolute top-2 right-2 hidden group-hover:flex items-center gap-1">
+          <button onClick={handleCopy}
+            className={`w-6 h-6 flex items-center justify-center rounded-lg transition-all ${
+              copied ? 'bg-green-100 text-green-500' : 'bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-500'}`}
+            title={t.copyBtn}>
+            {copied ? <Check size={11} /> : <Copy size={11} />}
+          </button>
+          <button onClick={handleDelete}
+            className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 transition-all"
+            title={t.deleteTitle}>
+            <Trash2 size={11} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
-export default function CardGrid({ cards, onDelete, onUpdateStatus }) {
+export default function CardGrid({ cards, onDelete, onUpdateStatus, selectMode, selectedIds, onToggleSelect }) {
   const { t } = useLang()
 
   if (cards.length === 0) {
@@ -113,7 +119,15 @@ export default function CardGrid({ cards, onDelete, onUpdateStatus }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {cards.map(item => (
-        <GridCell key={item.id} item={item} onDelete={onDelete} onUpdateStatus={onUpdateStatus} />
+        <GridCell
+          key={item.id}
+          item={item}
+          onDelete={onDelete}
+          onUpdateStatus={onUpdateStatus}
+          selectMode={selectMode}
+          isSelected={selectedIds?.has(item.id) ?? false}
+          onToggleSelect={onToggleSelect}
+        />
       ))}
     </div>
   )

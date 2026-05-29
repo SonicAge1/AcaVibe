@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { readVault, addItem, updateItem, deleteItem } from '../services/storage.js';
+import { readVault, addItem, updateItem, deleteItems, deleteItem } from '../services/storage.js';
 
 const router = Router();
 
@@ -62,6 +62,21 @@ router.patch('/:id', async (req, res) => {
   } catch (err) {
     console.error('[vault PATCH]', err.message);
     res.status(500).json({ error: '更新失败' });
+  }
+});
+
+// DELETE /api/vault/batch — 批量删除（body: { ids: string[] }）
+router.delete('/batch', async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'ids 必须是非空数组' });
+  }
+  try {
+    const data = await deleteItems(ids);
+    res.json(data);
+  } catch (err) {
+    console.error('[vault DELETE batch]', err.message);
+    res.status(500).json({ error: '批量删除失败' });
   }
 });
 

@@ -70,6 +70,21 @@ export async function updateItem(id, patch) {
   }
 }
 
+export async function deleteItems(ids) {
+  const idSet = new Set(ids);
+  const release = await mutex.acquire();
+  try {
+    await ensureDataFile();
+    const raw = await readFile(VAULT_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    data.items = data.items.filter((item) => !idSet.has(item.id));
+    await writeFile(VAULT_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return data;
+  } finally {
+    release();
+  }
+}
+
 export async function deleteItem(id) {
   const release = await mutex.acquire();
   try {

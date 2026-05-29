@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getVault, saveItem, patchItem, removeItem } from '../api/client'
+import { getVault, saveItem, patchItem, removeItem, removeItems } from '../api/client'
 
 export function useVault() {
   const [vault, setVault]     = useState({ intents: [], items: [] })
@@ -40,5 +40,10 @@ export function useVault() {
     setVault(data)
   }, [])
 
-  return { vault, loading, error, addItem, updateItemStatus, deleteItem, refetch: fetchVault }
+  const bulkDelete = useCallback(async (ids) => {
+    const data = await removeItems(ids)
+    setVault(data)
+  }, [])
+
+  return { vault, loading, error, addItem, updateItemStatus, deleteItem, bulkDelete, refetch: fetchVault }
 }

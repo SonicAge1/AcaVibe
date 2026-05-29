@@ -82,6 +82,24 @@ export const LANGS = {
     dictationRangeAll: '全部',
     dictationProgress: '进度',
 
+    // 排序
+    sortLabel: '排序：',
+    sortNewest: '最新',
+    sortOldest: '最旧',
+    sortAlpha: '字母序',
+    sortReviewing: '待复习优先',
+
+    // 批量操作
+    selectMode: '选择',
+    selectAll: '全选',
+    deselectAll: '反选',
+    cancelSelect: '取消',
+    selectedCount: (n) => `已选 ${n} 张`,
+    bulkDelete: '删除选中',
+
+    // 保存后调转
+    goVault: '去词库查看 →',
+
     // Intents
     intents: {
       '对比差异': '对比差异',
@@ -175,6 +193,24 @@ export const LANGS = {
     dictationRange: 'Range: ',
     dictationRangeAll: 'All',
     dictationProgress: 'Progress',
+
+    // Sort
+    sortLabel: 'Sort: ',
+    sortNewest: 'Newest',
+    sortOldest: 'Oldest',
+    sortAlpha: 'A → Z',
+    sortReviewing: 'To review first',
+
+    // Bulk
+    selectMode: 'Select',
+    selectAll: 'All',
+    deselectAll: 'Invert',
+    cancelSelect: 'Cancel',
+    selectedCount: (n) => `${n} selected`,
+    bulkDelete: 'Delete selected',
+
+    // Go vault
+    goVault: 'View in Vault →',
 
     // Intents (English labels shown in EN mode)
     intents: {
