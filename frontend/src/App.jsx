@@ -16,7 +16,7 @@ const TABS = [
 ]
 
 export default function App() {
-  const { vault, loading, error, deleteItem, updateItemStatus, bulkDelete, refetch } = useVault()
+  const { vault, loading, error, deleteItem, updateItemStatus, bulkDelete, addIntent, removeIntent, importData, refetch } = useVault()
   const { t, lang, toggleLang } = useLang()
   const [activeTab, setActiveTab] = useState('tools')
 
@@ -92,6 +92,9 @@ export default function App() {
                   onDelete={deleteItem}
                   onBulkDelete={bulkDelete}
                   onUpdateStatus={updateItemStatus}
+                  onAddIntent={addIntent}
+                  onRemoveIntent={removeIntent}
+                  onImport={importData}
                   loading={loading}
                 />
               )}

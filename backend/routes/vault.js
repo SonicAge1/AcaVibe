@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { readVault, addItem, updateItem, deleteItems, deleteItem } from '../services/storage.js';
+import {
+  readVault, addItem, updateItem,
+  deleteItems, deleteItem,
+  addIntent, removeIntent, importVault,
+} from '../services/storage.js';
 
 const router = Router();
 
@@ -13,6 +17,60 @@ router.get('/', async (req, res) => {
     console.error('[vault GET]', err.message);
     res.status(500).json({ error: '读取数据失败' });
   }
+});
+
+// GET /api/vault/export — 导出 JSON 文件
+router.get('/export', async (req, res) => {
+  try {
+    const data = await readVault();
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Disposition', `attachment; filename="acavibe-vault-${date}.json"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.json(data);
+  } catch (err) {
+    console.error('[vault export]', err.message);
+    res.status(500).json({ error: '导出失败' });
+  }
+});
+
+// POST /api/vault/import — 导入并合并 JSON
+router.post('/import', async (req, res) => {
+  const { vault } = req.body;
+  if (!vault || typeof vault !== 'object') {
+    return res.status(400).json({ error: '请求体必须包含 vault 对象' });
+  }
+  try {
+    const data = await importVault(vault);
+    res.json(data);
+  } catch (err) {
+    console.error('[vault import]', err.message);
+    res.status(500).json({ error: '导入失败' });
+  }
+});
+
+// POST /api/vault/intents — 新增意图
+router.post('/intents', async (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return res.status(400).json({ error: '意图名称不能为空' });
+  }
+  if (name.trim().length > 16) {
+    return res.status(400).json({ error: '意图名称最多 16 个字符' });
+  }
+  const result = await addIntent(name.trim());
+  if (result.error === 'duplicate') {
+    return res.status(409).json({ error: '意图已存在' });
+  }
+  res.status(201).json(result);
+});
+
+// DELETE /api/vault/intents/:name — 删除空意图
+router.delete('/intents/:name', async (req, res) => {
+  const result = await removeIntent(decodeURIComponent(req.params.name));
+  if (result && result.error === 'not_empty') {
+    return res.status(409).json({ error: '该意图下还有卡片，无法删除' });
+  }
+  res.json(result);
 });
 
 // POST /api/vault — 保存一条新条目

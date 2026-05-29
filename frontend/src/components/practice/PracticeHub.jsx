@@ -30,6 +30,7 @@ function DictationMode({ vault, onUpdateStatus, onExit }) {
   const [revealed, setRevealed]       = useState(false)
   const [result, setResult]           = useState(null) // 'correct' | 'partial' | 'wrong'
   const [finished, setFinished]       = useState(false)
+  const [scoreLog, setScoreLog]       = useState([])   // 记录每题结果
 
   const { intents, items } = vault
 
@@ -67,9 +68,10 @@ function DictationMode({ vault, onUpdateStatus, onExit }) {
     const score = scoreAnswer(input, answer)
     setResult(score)
     setRevealed(true)
+    setScoreLog(prev => [...prev, score])
   }
 
-  function handleNext() {
+  function handleNext(statusOverride) {
     if (qIndex + 1 >= queue.length) {
       setFinished(true)
       return
@@ -102,20 +104,56 @@ function DictationMode({ vault, onUpdateStatus, onExit }) {
 
   // 完成结算
   if (finished) {
+    const correctCount  = scoreLog.filter(s => s === 'correct').length
+    const partialCount  = scoreLog.filter(s => s === 'partial').length
+    const wrongCount    = scoreLog.filter(s => s === 'wrong').length
+    const total         = scoreLog.length || 1
+    const accuracy      = Math.round((correctCount / total) * 100)
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
+      <div className="max-w-sm mx-auto py-12 flex flex-col items-center gap-5">
         <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center">
           <Check size={28} className="text-emerald-500" />
         </div>
         <p className="text-xl font-bold text-slate-800">{t.dictationFinished}</p>
-        <p className="text-slate-400 text-sm text-center max-w-xs">{t.dictationFinishedDesc}</p>
-        <div className="flex gap-3 mt-2">
+        <p className="text-slate-400 text-sm text-center">{t.statsBravo(accuracy)}</p>
+
+        {/* 统计卡片 */}
+        <div className="w-full bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col gap-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t.statsTitle}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col items-center gap-1 bg-emerald-50 rounded-xl py-3">
+              <p className="text-xl font-bold text-emerald-600">{correctCount}</p>
+              <p className="text-xs text-emerald-500">{t.statsCorrect}</p>
+            </div>
+            <div className="flex flex-col items-center gap-1 bg-amber-50 rounded-xl py-3">
+              <p className="text-xl font-bold text-amber-500">{partialCount}</p>
+              <p className="text-xs text-amber-400">{t.statsPartial}</p>
+            </div>
+            <div className="flex flex-col items-center gap-1 bg-red-50 rounded-xl py-3">
+              <p className="text-xl font-bold text-red-500">{wrongCount}</p>
+              <p className="text-xs text-red-400">{t.statsWrong}</p>
+            </div>
+          </div>
+          {/* 正确率进度条 */}
+          <div>
+            <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+              <span>{t.statsAccuracy}</span>
+              <span className="font-semibold text-slate-600">{accuracy}%</span>
+            </div>
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-400 rounded-full transition-all"
+                style={{ width: `${accuracy}%` }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 w-full">
           <button onClick={handleStart}
-            className="px-5 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-xl transition">
+            className="flex-1 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-xl transition">
             {t.dictationRestart}
           </button>
           <button onClick={onExit}
-            className="px-5 py-2 border border-slate-200 text-slate-500 text-sm font-medium rounded-xl hover:border-slate-300 transition">
+            className="flex-1 py-2.5 border border-slate-200 text-slate-500 text-sm font-medium rounded-xl hover:border-slate-300 transition">
             {lang === 'en' ? 'Back' : '返回'}
           </button>
         </div>

@@ -54,6 +54,58 @@ export async function addItem(item) {
   }
 }
 
+export async function addIntent(name) {
+  const release = await mutex.acquire();
+  try {
+    await ensureDataFile();
+    const raw = await readFile(VAULT_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    if (data.intents.includes(name)) return { error: 'duplicate' };
+    data.intents.push(name);
+    await writeFile(VAULT_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return data;
+  } finally {
+    release();
+  }
+}
+
+export async function removeIntent(name) {
+  const release = await mutex.acquire();
+  try {
+    await ensureDataFile();
+    const raw = await readFile(VAULT_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    const hasItems = data.items.some(item => item.intent === name);
+    if (hasItems) return { error: 'not_empty' };
+    data.intents = data.intents.filter(i => i !== name);
+    await writeFile(VAULT_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return data;
+  } finally {
+    release();
+  }
+}
+
+export async function importVault(incoming) {
+  const release = await mutex.acquire();
+  try {
+    await ensureDataFile();
+    const raw = await readFile(VAULT_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    // 合并意图
+    const intentSet = new Set(data.intents);
+    (incoming.intents || []).forEach(i => intentSet.add(i));
+    data.intents = [...intentSet];
+    // 合并条目（id 不重复才追加）
+    const existingIds = new Set(data.items.map(i => i.id));
+    const newItems = (incoming.items || []).filter(i => !existingIds.has(i.id));
+    data.items = [...newItems, ...data.items];
+    await writeFile(VAULT_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return data;
+  } finally {
+    release();
+  }
+}
+
 export async function updateItem(id, patch) {
   const release = await mutex.acquire();
   try {

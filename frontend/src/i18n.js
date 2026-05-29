@@ -100,6 +100,30 @@ export const LANGS = {
     // 保存后调转
     goVault: '去词库查看 →',
 
+    // 自定义意图
+    addIntent: '+ 新建意图',
+    intentPlaceholder: '输入意图名称',
+    intentTooLong: '最多 16 个字符',
+    intentDuplicate: '意图已存在',
+    intentConfirm: '确认',
+    intentCancel: '取消',
+    intentDeleteTitle: '删除该意图',
+
+    // 导入导出
+    exportBtn: '导出',
+    importBtn: '导入',
+    importSuccess: '导入成功',
+    importError: '文件格式错误',
+    importMerged: (n) => `新增 ${n} 条条目`,
+
+    // 练习统计
+    statsTitle: '本轮结果',
+    statsCorrect: '完全正确',
+    statsPartial: '部分正确',
+    statsWrong: '答错',
+    statsAccuracy: '正确率',
+    statsBravo: (pct) => pct >= 80 ? '太棒了！将这些词吸纳了' : pct >= 50 ? '进步明显，继续加油' : '还需多练练，加油！',
+
     // Intents
     intents: {
       '对比差异': '对比差异',
@@ -211,6 +235,30 @@ export const LANGS = {
 
     // Go vault
     goVault: 'View in Vault →',
+
+    // Custom intent
+    addIntent: '+ Add intent',
+    intentPlaceholder: 'Intent name',
+    intentTooLong: 'Max 16 chars',
+    intentDuplicate: 'Already exists',
+    intentConfirm: 'OK',
+    intentCancel: 'Cancel',
+    intentDeleteTitle: 'Delete intent',
+
+    // Import / Export
+    exportBtn: 'Export',
+    importBtn: 'Import',
+    importSuccess: 'Import successful',
+    importError: 'Invalid file format',
+    importMerged: (n) => `${n} new items added`,
+
+    // Practice stats
+    statsTitle: 'Results',
+    statsCorrect: 'Correct',
+    statsPartial: 'Partial',
+    statsWrong: 'Wrong',
+    statsAccuracy: 'Accuracy',
+    statsBravo: (pct) => pct >= 80 ? 'Excellent! Keep it up!' : pct >= 50 ? 'Good progress, keep going!' : 'Keep practicing!',
 
     // Intents (English labels shown in EN mode)
     intents: {

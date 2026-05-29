@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { BookOpen, Type, LayoutDashboard, Search, LayoutGrid, GalleryHorizontal, X, Trash2, CheckSquare } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { BookOpen, Type, LayoutDashboard, Search, LayoutGrid, GalleryHorizontal, X, Trash2, CheckSquare, Download, Upload } from 'lucide-react'
 import { useLang } from '../../LangContext'
+import { exportVault } from '../../api/client'
 import FlashCard from './FlashCard'
 import Pagination from './Pagination'
 import IntentTabs from './IntentTabs'
@@ -43,7 +44,7 @@ function sortCards(cards, mode) {
   }
 }
 
-export default function KanbanVault({ vault, onDelete, onBulkDelete, onUpdateStatus, loading }) {
+export default function KanbanVault({ vault, onDelete, onBulkDelete, onUpdateStatus, onAddIntent, onRemoveIntent, onImport, loading }) {
   const { t } = useLang()
   const [activeType, setActiveType]       = useState('skeleton')
   const [activeIntent, setActiveIntent]   = useState(null)
@@ -155,6 +156,26 @@ export default function KanbanVault({ vault, onDelete, onBulkDelete, onUpdateSta
         <h2 className="text-base font-semibold text-slate-700">{t.vaultTitle}</h2>
         <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{items.length}</span>
         <div className="flex-1" />
+        {/* 导入导出 */}
+        <a href={exportVault()} download title={t.exportBtn}
+          className="flex items-center gap-1.5 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-500 hover:text-indigo-500 hover:border-indigo-300 transition">
+          <Download size={12} /> {t.exportBtn}
+        </a>
+        <label title={t.importBtn}
+          className="flex items-center gap-1.5 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-500 hover:text-indigo-500 hover:border-indigo-300 transition cursor-pointer">
+          <Upload size={12} /> {t.importBtn}
+          <input type="file" accept=".json" className="hidden" onChange={async e => {
+            const file = e.target.files[0]; e.target.value = ''
+            if (!file) return
+            try {
+              const text = await file.text()
+              const vault = JSON.parse(text)
+              if (!vault.items || !vault.intents) return alert(t.importError)
+              await onImport(vault)
+              alert(t.importSuccess)
+            } catch { alert(t.importError) }
+          }} />
+        </label>
         {/* 视图切换 */}
         <div className="flex gap-1 p-0.5 bg-slate-100 rounded-lg">
           <button onClick={() => { setViewMode('flash'); setSelectMode(false) }} title={t.viewFlash}
@@ -195,7 +216,14 @@ export default function KanbanVault({ vault, onDelete, onBulkDelete, onUpdateSta
 
       {/* 意图 Tab */}
       <div className="mb-4">
-        <IntentTabs intents={intents} countMap={countMap} activeIntent={activeIntent} onSelect={handleIntentChange} />
+        <IntentTabs
+          intents={intents}
+          countMap={countMap}
+          activeIntent={activeIntent}
+          onSelect={handleIntentChange}
+          onAddIntent={onAddIntent}
+          onRemoveIntent={onRemoveIntent}
+        />
       </div>
 
       {/* 工具栏：搜索 + 状态过滤 + 排序 + 多选按钮 */}

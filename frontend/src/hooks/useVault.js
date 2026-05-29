@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getVault, saveItem, patchItem, removeItem, removeItems } from '../api/client'
+import {
+  getVault, saveItem, patchItem, removeItem, removeItems,
+  addIntentAPI, removeIntentAPI, importVaultAPI,
+} from '../api/client'
 
 export function useVault() {
   const [vault, setVault]     = useState({ intents: [], items: [] })
@@ -26,7 +29,6 @@ export function useVault() {
     return res
   }, [])
 
-  // 乐观更新：先改本地 state，再同步后端
   const updateItemStatus = useCallback(async (id, status) => {
     setVault(prev => ({
       ...prev,
@@ -45,5 +47,25 @@ export function useVault() {
     setVault(data)
   }, [])
 
-  return { vault, loading, error, addItem, updateItemStatus, deleteItem, bulkDelete, refetch: fetchVault }
+  const addIntent = useCallback(async (name) => {
+    const data = await addIntentAPI(name)
+    setVault(data)
+  }, [])
+
+  const removeIntent = useCallback(async (name) => {
+    const data = await removeIntentAPI(name)
+    setVault(data)
+  }, [])
+
+  const importData = useCallback(async (vaultData) => {
+    const data = await importVaultAPI(vaultData)
+    setVault(data)
+  }, [])
+
+  return {
+    vault, loading, error,
+    addItem, updateItemStatus, deleteItem, bulkDelete,
+    addIntent, removeIntent, importData,
+    refetch: fetchVault,
+  }
 }
