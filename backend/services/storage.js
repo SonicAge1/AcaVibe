@@ -54,6 +54,22 @@ export async function addItem(item) {
   }
 }
 
+export async function updateItem(id, patch) {
+  const release = await mutex.acquire();
+  try {
+    await ensureDataFile();
+    const raw = await readFile(VAULT_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    const idx = data.items.findIndex((item) => item.id === id);
+    if (idx === -1) return null;
+    data.items[idx] = { ...data.items[idx], ...patch };
+    await writeFile(VAULT_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    return data.items[idx];
+  } finally {
+    release();
+  }
+}
+
 export async function deleteItem(id) {
   const release = await mutex.acquire();
   try {

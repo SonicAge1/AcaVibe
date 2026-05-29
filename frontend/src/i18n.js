@@ -54,6 +54,34 @@ export const LANGS = {
     viewGrid: '全览',
     gridHint: '点击卡片可复制内容',
 
+    // 状态标记
+    statusUnreviewed: '未标记',
+    statusReviewing: '待复习',
+    statusMastered: '已掌握',
+    markStatus: '标记状态',
+
+    // 默写模式
+    dictationTitle: '默写模式',
+    dictationDesc: '看提示展示，靠记忆写出正确表达',
+    dictationStart: '开始默写',
+    dictationInput: '输入你记忆中的表达...',
+    dictationReveal: '揭晓',
+    dictationNext: '下一题',
+    dictationMarkMastered: '标记已掌握',
+    dictationMarkReviewing: '加入待复习',
+    dictationCorrect: '完全正确！',
+    dictationPartial: '部分正确',
+    dictationWrong: '试试再来',
+    dictationAnswer: '正确答案：',
+    dictationFinished: '本轮完成！',
+    dictationFinishedDesc: '你已做完本次所有卡片，太棒了！',
+    dictationRestart: '再来一轮',
+    dictationEmpty: '词库里还没有卡片',
+    dictationEmptyHint: '去「工具」页添加一些词汇或骨架吧',
+    dictationRange: '题目范围：',
+    dictationRangeAll: '全部',
+    dictationProgress: '进度',
+
     // Intents
     intents: {
       '对比差异': '对比差异',
@@ -119,6 +147,34 @@ export const LANGS = {
     viewFlash: 'Flashcard',
     viewGrid: 'Overview',
     gridHint: 'Click a card to copy',
+
+    // Status
+    statusUnreviewed: 'Not marked',
+    statusReviewing: 'To review',
+    statusMastered: 'Mastered',
+    markStatus: 'Mark status',
+
+    // Dictation mode
+    dictationTitle: 'Dictation',
+    dictationDesc: 'See the hint, recall and write it from memory',
+    dictationStart: 'Start Dictation',
+    dictationInput: 'Type the expression you remember...',
+    dictationReveal: 'Reveal',
+    dictationNext: 'Next',
+    dictationMarkMastered: 'Mark as mastered',
+    dictationMarkReviewing: 'Add to review list',
+    dictationCorrect: 'Correct!',
+    dictationPartial: 'Partially correct',
+    dictationWrong: 'Not quite',
+    dictationAnswer: 'Answer: ',
+    dictationFinished: 'Round complete!',
+    dictationFinishedDesc: "You've gone through all cards this round. Great job!",
+    dictationRestart: 'Go again',
+    dictationEmpty: 'No cards in vault yet',
+    dictationEmptyHint: 'Go to Tools to add some words or skeletons first',
+    dictationRange: 'Range: ',
+    dictationRangeAll: 'All',
+    dictationProgress: 'Progress',
 
     // Intents (English labels shown in EN mode)
     intents: {

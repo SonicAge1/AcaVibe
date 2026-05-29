@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, Type, Copy, Trash2, Check } from 'lucide-react'
+import { BookOpen, Type, Copy, Trash2, Check, Clock, Star } from 'lucide-react'
 import { useLang } from '../../LangContext'
 
 const TYPE_CONFIG = {
@@ -17,8 +17,23 @@ const TYPE_CONFIG = {
   },
 }
 
-// 全览单格（精简版卡片）
-function GridCell({ item, onDelete }) {
+// 状态角标
+function StatusDot({ status }) {
+  if (!status || status === 'unreviewed') return null
+  if (status === 'reviewing') return (
+    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-100 text-amber-500">
+      <Clock size={9} />
+    </span>
+  )
+  return (
+    <span className="absolute top-2 left-2 w-4 h-4 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-500">
+      <Star size={9} />
+    </span>
+  )
+}
+
+// 全览单格
+function GridCell({ item, onDelete, onUpdateStatus }) {
   const { t } = useLang()
   const [copied, setCopied] = useState(false)
   const cfg     = TYPE_CONFIG[item.type]
@@ -43,6 +58,8 @@ function GridCell({ item, onDelete }) {
       onClick={handleCopy}
       title={t.gridHint}
     >
+      <StatusDot status={item.status} />
+
       {/* 类型徽章 */}
       <span className={`self-start inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${cfg.badge}`}>
         {cfg.renderIcon(10)} {t[cfg.labelKey]}
@@ -53,15 +70,13 @@ function GridCell({ item, onDelete }) {
         {content}
       </p>
 
-      {/* word 直译 */}
       {item.type === 'word' && item.translation && (
         <p className="text-xs text-indigo-500 font-medium">{item.translation}</p>
       )}
 
-      {/* 提示（单行截断） */}
       <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{item.hint}</p>
 
-      {/* 悬浮操作栏 */}
+      {/* 悬浮操作 */}
       <div className="absolute top-2 right-2 hidden group-hover:flex items-center gap-1">
         <button
           onClick={handleCopy}
@@ -84,8 +99,7 @@ function GridCell({ item, onDelete }) {
   )
 }
 
-// 全览网格主体
-export default function CardGrid({ cards, onDelete }) {
+export default function CardGrid({ cards, onDelete, onUpdateStatus }) {
   const { t } = useLang()
 
   if (cards.length === 0) {
@@ -99,7 +113,7 @@ export default function CardGrid({ cards, onDelete }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {cards.map(item => (
-        <GridCell key={item.id} item={item} onDelete={onDelete} />
+        <GridCell key={item.id} item={item} onDelete={onDelete} onUpdateStatus={onUpdateStatus} />
       ))}
     </div>
   )

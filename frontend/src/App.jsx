@@ -17,7 +17,7 @@ const TABS = [
 ]
 
 export default function App() {
-  const { vault, loading, error, deleteItem, refetch } = useVault()
+  const { vault, loading, error, deleteItem, updateItemStatus, refetch } = useVault()
   const { t, lang, toggleLang } = useLang()
   const [activeTab, setActiveTab] = useState('tools')
 
@@ -98,14 +98,14 @@ export default function App() {
               {error ? (
                 <div className="text-center py-12 text-red-500 text-sm">{error}</div>
               ) : (
-                <KanbanVault vault={vault} onDelete={deleteItem} loading={loading} />
+                <KanbanVault vault={vault} onDelete={deleteItem} onUpdateStatus={updateItemStatus} loading={loading} />
               )}
             </div>
           )}
 
           {activeTab === 'practice' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-              <PracticeHub vault={vault} />
+              <PracticeHub vault={vault} onUpdateStatus={updateItemStatus} />
             </div>
           )}
         </main>

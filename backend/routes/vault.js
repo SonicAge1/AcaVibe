@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { readVault, addItem, deleteItem } from '../services/storage.js';
+import { readVault, addItem, updateItem, deleteItem } from '../services/storage.js';
 
 const router = Router();
 
@@ -44,6 +44,24 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error('[vault POST]', err.message);
     res.status(500).json({ error: '保存失败' });
+  }
+});
+
+// PATCH /api/vault/:id — 更新单条条目的字段（如 status）
+const VALID_STATUSES = ['unreviewed', 'reviewing', 'mastered'];
+
+router.patch('/:id', async (req, res) => {
+  const { status } = req.body;
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: `status 值非法，合法值：${VALID_STATUSES.join(', ')}` });
+  }
+  try {
+    const updated = await updateItem(req.params.id, { status });
+    if (!updated) return res.status(404).json({ error: '条目不存在' });
+    res.json(updated);
+  } catch (err) {
+    console.error('[vault PATCH]', err.message);
+    res.status(500).json({ error: '更新失败' });
   }
 });
 

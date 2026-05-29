@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Copy, Trash2, ChevronDown, ChevronUp, Check,
-  BookOpen, Type
+  BookOpen, Type, RotateCcw, Clock, Star
 } from 'lucide-react'
 import { useLang } from '../../LangContext'
 
@@ -19,11 +19,35 @@ const TYPE_CONFIG = {
   },
 }
 
-export default function FlashCard({ item, onDelete }) {
+// 状态三态配置
+const STATUS_CONFIG = {
+  unreviewed: {
+    icon: (size) => <RotateCcw size={size} />,
+    next: 'reviewing',
+    btnClass: 'text-slate-400 border-slate-200 hover:text-amber-500 hover:border-amber-300 hover:bg-amber-50',
+    labelKey: 'statusUnreviewed',
+  },
+  reviewing: {
+    icon: (size) => <Clock size={size} />,
+    next: 'mastered',
+    btnClass: 'text-amber-500 border-amber-300 bg-amber-50 hover:text-emerald-500 hover:border-emerald-300 hover:bg-emerald-50',
+    labelKey: 'statusReviewing',
+  },
+  mastered: {
+    icon: (size) => <Star size={size} />,
+    next: 'unreviewed',
+    btnClass: 'text-emerald-500 border-emerald-300 bg-emerald-50 hover:text-slate-400 hover:border-slate-200 hover:bg-white',
+    labelKey: 'statusMastered',
+  },
+}
+
+export default function FlashCard({ item, onDelete, onUpdateStatus }) {
   const { t } = useLang()
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied]     = useState(false)
   const cfg     = TYPE_CONFIG[item.type]
+  const status  = item.status || 'unreviewed'
+  const sCfg    = STATUS_CONFIG[status]
   const content = item.type === 'skeleton' ? item.skeleton : item.word
 
   function handleCopy() {
@@ -32,16 +56,27 @@ export default function FlashCard({ item, onDelete }) {
     setTimeout(() => setCopied(false), 1800)
   }
 
+  function handleStatusCycle() {
+    onUpdateStatus(item.id, sCfg.next)
+  }
+
   // 切换卡片时收起溯源
   useEffect(() => { setExpanded(false) }, [item.id])
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-52">
-      {/* 类型徽章 */}
-      <div className="flex items-center px-5 pt-4 pb-2">
+      {/* 顶部：类型徽章 + 状态标记 */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.cardBadge}`}>
           {cfg.renderIcon(11)} {t[cfg.labelKey]}
         </span>
+        <button
+          onClick={handleStatusCycle}
+          title={t.markStatus}
+          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${sCfg.btnClass}`}
+        >
+          {sCfg.icon(11)} {t[sCfg.labelKey]}
+        </button>
       </div>
 
       {/* 核心内容 */}
@@ -49,13 +84,12 @@ export default function FlashCard({ item, onDelete }) {
         <p className="text-base font-mono font-medium text-slate-800 leading-relaxed break-words">
           {content}
         </p>
-        {/* word 类型：显示中文直译 */}
         {item.type === 'word' && item.translation && (
           <p className="text-sm text-indigo-500 font-medium mt-1">{item.translation}</p>
         )}
       </div>
 
-      {/* 提示文字（使用场景） */}
+      {/* 提示文字 */}
       <div className="px-5 pb-3">
         <p className="text-sm text-slate-500 leading-relaxed">{item.hint}</p>
       </div>
@@ -88,10 +122,7 @@ export default function FlashCard({ item, onDelete }) {
               : 'bg-indigo-500 hover:bg-indigo-600 text-white'
           }`}
         >
-          {copied
-            ? <><Check size={14} /> {t.copied}</>
-            : <><Copy size={14} /> {t.copyBtn}</>
-          }
+          {copied ? <><Check size={14} /> {t.copied}</> : <><Copy size={14} /> {t.copyBtn}</>}
         </button>
         <button
           onClick={() => onDelete(item.id)}
